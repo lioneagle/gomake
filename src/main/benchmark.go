@@ -29,7 +29,18 @@ func benchmark(config *config.RunConfig) error {
 		return err
 	}
 
-	return generateTestFile(config)
+	err = generateTestFile(config)
+	if err != nil {
+		return err
+	}
+
+	if config.Benchmark.GoTorch {
+		err = generateTorchFile(config)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func doBenchmark(config *config.RunConfig) error {
@@ -42,6 +53,18 @@ func doBenchmark(config *config.RunConfig) error {
 		"-cpuprofile", cpuProfileFileName,
 		"-memprofile", memProfileFileName)
 
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func generateTorchFile(config *config.RunConfig) error {
+	torchFileName := getTorchFileName(config, config.Benchmark.Package)
+	cpuProfileFileName := getCpuProfileFileName(config, config.Benchmark.Package)
+
+	cmd := exec.Command("go-torch", cpuProfileFileName,
+		"-f", torchFileName,
+		"-width", "1900")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -75,4 +98,8 @@ func getCpuProfileFileName(config *config.RunConfig, packageName string) string 
 
 func getMemProfileFileName(config *config.RunConfig, packageName string) string {
 	return getTestPath(config) + filepath.Base(packageName) + "_mem.prof"
+}
+
+func getTorchFileName(config *config.RunConfig, packageName string) string {
+	return getTestPath(config) + filepath.Base(packageName) + "_cpu.svg"
 }

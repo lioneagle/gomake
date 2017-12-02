@@ -62,6 +62,7 @@ type BenchmarkConfig struct {
 	Package   string
 	BenchTime int
 	Regexp    string
+	GoTorch   bool
 	flagset   *flag.FlagSet
 }
 
@@ -71,6 +72,7 @@ func (this *BenchmarkConfig) makeFlags() {
 	this.flagset.BoolVar(&this.Help, "help", false, "")
 	this.flagset.IntVar(&this.BenchTime, "benchtime", 1, "Run enough iterations of each benchmark to take t, specified as seconds.")
 	this.flagset.StringVar(&this.Regexp, "run", ".", "Run only those benchmarks matching a regular expression.")
+	this.flagset.BoolVar(&this.GoTorch, "torch", false, "Run go-torch to get fireflame graph (default false).")
 }
 
 func (this *BenchmarkConfig) usage() {
@@ -82,6 +84,10 @@ func (this *BenchmarkConfig) usage() {
 
     -run regexp
         Run only those tests and examples matching the regular expression (default ".").
+
+    -torch svg-filename
+        Run go-torch to get fireflame graph.
+
 `)
 }
 
