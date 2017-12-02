@@ -10,6 +10,7 @@ import (
 )
 
 type CoverageConfig struct {
+	Help     bool
 	Packages string
 	Verbose  bool
 	ShowHtml bool
@@ -20,6 +21,7 @@ type CoverageConfig struct {
 func (this *CoverageConfig) makeFlags() {
 	this.flagset = flag.NewFlagSet("coverage", flag.ExitOnError)
 	this.flagset.Usage = this.usage
+	this.flagset.BoolVar(&this.Help, "help", false, "")
 	this.flagset.StringVar(&this.Packages, "packages", ".", "Apply coverage analysis in each test to the given list of packages.")
 	this.flagset.BoolVar(&this.Verbose, "v", false, "Verbose output.")
 	this.flagset.BoolVar(&this.ShowHtml, "html", false, "Show html.")
@@ -48,9 +50,15 @@ func (this *CoverageConfig) parse() {
 	if len(os.Args) > 2 {
 		this.flagset.Parse(os.Args[2:])
 	}
+
+	if this.Help {
+		this.usage()
+		os.Exit(2)
+	}
 }
 
 type BenchmarkConfig struct {
+	Help      bool
 	Package   string
 	BenchTime int
 	Regexp    string
@@ -60,6 +68,7 @@ type BenchmarkConfig struct {
 func (this *BenchmarkConfig) makeFlags() {
 	this.flagset = flag.NewFlagSet("benchmark", flag.ExitOnError)
 	this.flagset.Usage = this.usage
+	this.flagset.BoolVar(&this.Help, "help", false, "")
 	this.flagset.IntVar(&this.BenchTime, "benchtime", 1, "Run enough iterations of each benchmark to take t, specified as seconds.")
 	this.flagset.StringVar(&this.Regexp, "run", ".", "Run only those benchmarks matching a regular expression.")
 }
@@ -82,24 +91,53 @@ func (this *BenchmarkConfig) parse() {
 		os.Exit(2)
 	}
 	this.Package = os.Args[2]
+
+	if os.Args[2][0] == '-' {
+		this.usage()
+		os.Exit(2)
+	}
+
 	if len(os.Args) > 3 {
 		this.flagset.Parse(os.Args[3:])
+	}
+
+	if this.Help {
+		this.usage()
+		os.Exit(2)
 	}
 }
 
 type InstallConfig struct {
-	Package    string
-	OutputName string
+	Help           bool
+	Package        string
+	OutputName     string
+	Arch           string
+	WithArchSuffix bool
+	flagset        *flag.FlagSet
 }
 
 func (this *InstallConfig) usage() {
 	fmt.Printf("%s",
-		`Usage: install package [outputname]
+		`Usage: install package [outputname] [flags]
+
+    -output
+        Output name.
+
+    -arch  64 | 32 | all
+        Output architure (default 64).
+
+    -arch-suffix  
+        Output filename with architecture suffix (default true).
 `)
 }
 
 func (this *InstallConfig) makeFlags() {
-
+	this.flagset = flag.NewFlagSet("install", flag.ExitOnError)
+	this.flagset.Usage = this.usage
+	this.flagset.BoolVar(&this.Help, "help", false, "")
+	this.flagset.StringVar(&this.OutputName, "output", "", "Output name")
+	this.flagset.StringVar(&this.Arch, "arch", "64", "Output architure")
+	this.flagset.BoolVar(&this.WithArchSuffix, "arch-suffix", true, "Output filename with architecture suffix")
 }
 
 func (this *InstallConfig) parse() {
@@ -107,17 +145,30 @@ func (this *InstallConfig) parse() {
 		this.usage()
 		os.Exit(2)
 	}
+
+	if os.Args[2][0] == '-' {
+		this.usage()
+		os.Exit(2)
+	}
+
 	this.Package = os.Args[2]
 
-	if len(os.Args) >= 4 {
-		this.OutputName = os.Args[3]
+	if len(os.Args) > 3 {
+		this.flagset.Parse(os.Args[3:])
 	}
+
 	if this.OutputName == "" {
 		this.OutputName = this.Package
+	}
+
+	if this.Help {
+		this.usage()
+		os.Exit(2)
 	}
 }
 
 type PProfConfig struct {
+	Help      bool
 	Package   string
 	NodeCount int
 	flagset   *flag.FlagSet
@@ -126,6 +177,7 @@ type PProfConfig struct {
 func (this *PProfConfig) makeFlags() {
 	this.flagset = flag.NewFlagSet("pprof", flag.ExitOnError)
 	this.flagset.Usage = this.usage
+	this.flagset.BoolVar(&this.Help, "help", false, "")
 	this.flagset.IntVar(&this.NodeCount, "nodecount", 30, "Max number of nodes to show")
 }
 
@@ -143,9 +195,21 @@ func (this *PProfConfig) parse() {
 		this.usage()
 		os.Exit(2)
 	}
+
 	this.Package = os.Args[2]
+
+	if os.Args[2][0] == '-' {
+		this.usage()
+		os.Exit(2)
+	}
+
 	if len(os.Args) > 3 {
 		this.flagset.Parse(os.Args[3:])
+	}
+
+	if this.Help {
+		this.usage()
+		os.Exit(2)
 	}
 }
 

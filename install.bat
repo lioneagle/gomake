@@ -17,6 +17,7 @@ if "%2" == "" (
 
 if %GOARCH% == amd64 (
 	echo installing 64-bit ......
+	rem go install %1
 	go install %1
 
 	if exist .\bin\%1.exe (
