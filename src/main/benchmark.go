@@ -34,6 +34,10 @@ func benchmark(config *config.RunConfig) error {
 		return err
 	}
 
+	if ok, _ := file.PathOrFileIsExist(getCpuProfileFileName(config, config.Benchmark.Package)); !ok {
+		return nil
+	}
+
 	if config.Benchmark.GoTorch {
 		err = generateTorchFile(config)
 		if err != nil {
