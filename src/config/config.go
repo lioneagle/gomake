@@ -85,8 +85,8 @@ func (this *BenchmarkConfig) usage() {
     -run regexp
         Run only those tests and examples matching the regular expression (default ".").
 
-    -torch svg-filename
-        Run go-torch to get fireflame graph.
+    -torch
+        Run go-torch to get fireflame graph (default false).
 
 `)
 }
