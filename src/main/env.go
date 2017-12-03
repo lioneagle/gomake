@@ -24,7 +24,14 @@ func setEnv(config *config.RunConfig) error {
 		newPath = fmt.Sprintf("%s;%s", oldPath, dir)
 	}
 
-	return os.Setenv("GOPATH", newPath)
+	err = os.Setenv("GOPATH", newPath)
+	if err != nil {
+		return err
+	}
+
+	config.OldGobin = os.Getenv("GOBIN")
+
+	return os.Setenv("GOBIN", filepath.FromSlash(dir+"/bin"))
 }
 
 func addOsSuffix(name string) string {

@@ -119,6 +119,7 @@ type InstallConfig struct {
 	OutputName     string
 	Arch           string
 	WithArchSuffix bool
+	CopyToStdGoBin bool
 	flagset        *flag.FlagSet
 }
 
@@ -134,6 +135,9 @@ func (this *InstallConfig) usage() {
 
     -arch-suffix  
         Output filename with architecture suffix (default true).
+
+    -copy2gobin  
+        Copy file to std gobin (default false).
 `)
 }
 
@@ -144,6 +148,7 @@ func (this *InstallConfig) makeFlags() {
 	this.flagset.StringVar(&this.OutputName, "output", "", "Output name")
 	this.flagset.StringVar(&this.Arch, "arch", "64", "Output architure")
 	this.flagset.BoolVar(&this.WithArchSuffix, "arch-suffix", true, "Output filename with architecture suffix")
+	this.flagset.BoolVar(&this.CopyToStdGoBin, "copy2gobin", false, "Copy file to std gobin")
 }
 
 func (this *InstallConfig) parse() {
@@ -225,6 +230,8 @@ type RunConfig struct {
 	Benchmark BenchmarkConfig
 	Install   InstallConfig
 	Pprof     PProfConfig
+
+	OldGobin string
 }
 
 func NewRunConfig() *RunConfig {
@@ -233,6 +240,7 @@ func NewRunConfig() *RunConfig {
 	config.Benchmark.makeFlags()
 	config.Install.makeFlags()
 	config.Pprof.makeFlags()
+
 	return config
 }
 

@@ -6,6 +6,8 @@ import (
 	"os/exec"
 
 	"config"
+
+	"github.com/lioneagle/goutil/src/file"
 )
 
 func install(config *config.RunConfig) error {
@@ -47,7 +49,18 @@ func installArch64(config *config.RunConfig) error {
 		return err
 	}
 
-	return os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	err = os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	if err != nil {
+		return err
+	}
+
+	if config.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func installArch32(config *config.RunConfig) error {
@@ -64,7 +77,18 @@ func installArch32(config *config.RunConfig) error {
 		return err
 	}
 
-	return os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	err = os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	if err != nil {
+		return err
+	}
+
+	if config.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func buildArch32(config *config.RunConfig) error {
@@ -86,6 +110,12 @@ func buildArch32(config *config.RunConfig) error {
 		return err
 	}
 
+	if config.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

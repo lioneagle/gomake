@@ -30,8 +30,6 @@ func coverage(config *config.RunConfig) error {
 		return nil
 	}
 
-	fmt.Println("packages =", packages)
-
 	err := coverageOnePackage(config, packages[0], coverageFileName)
 	if err != nil {
 		return err
@@ -43,17 +41,59 @@ func coverage(config *config.RunConfig) error {
 			return err
 		}
 
-		err = mergeCoverageOutput(coverageFileName, tempCoverageFileName)
-		if err != nil {
-			return err
+		if ok, _ := file.PathOrFileIsExist(tempCoverageFileName); ok {
+			err = mergeCoverageOutput(coverageFileName, tempCoverageFileName)
+			if err != nil {
+				return err
+			}
+
+			file.RemoveExistFile(tempCoverageFileName)
 		}
 	}
 
-	file.RemoveExistFile(tempCoverageFileName)
+	if ok, _ := file.PathOrFileIsExist(tempCoverageFileName); !ok {
+		return nil
+	}
+
+	if err = showTotalStat(config); err != nil {
+		return err
+	}
+
+	if err = generateHtml(config); err != nil {
+		return err
+	}
 
 	if config.Coverage.ShowHtml {
 		showHtml(config)
 	}
+
+	return nil
+}
+
+func showTotalStat(config *config.RunConfig) error {
+	cmd := exec.Command("go", "tool", "cover",
+		"-func", getCoverageFileName(config))
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	cmd.Start()
+
+	reader := bufio.NewReader(stdout)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil || io.EOF == err {
+			break
+		}
+		if strings.HasPrefix(line, "total") {
+			fmt.Println(chars.StringPackSpace(line))
+			break
+		}
+	}
+
+	cmd.Wait()
 
 	return nil
 }
@@ -70,7 +110,7 @@ func mergeCoverageOutput(destFileName, srcFileName string) error {
 		return nil
 	}
 
-	return ioutil.WriteFile(destFileName, srcData[pos+1:], os.ModeAppend)
+	return file.AppendFile(destFileName, srcData[pos+1:], 0x777)
 }
 
 func parsePackages(config *config.RunConfig) []string {
@@ -133,22 +173,21 @@ func coverageOnePackage(config *config.RunConfig, packageName, coverageFileName 
 	return cmd.Run()
 }
 
-func showHtml(config *config.RunConfig) error {
+func generateHtml(config *config.RunConfig) error {
 	cmd := exec.Command("go", "tool", "cover",
 		"-html", getCoverageFileName(config),
 		"-o", getCoverageHtmlFileName(config))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
+	return cmd.Run()
+}
 
-	cmd = exec.Command("cmd", "/C", filepath.FromSlash(getCoverageHtmlFileName(config)))
+func showHtml(config *config.RunConfig) error {
+	cmd := exec.Command("cmd", "/C", filepath.FromSlash(getCoverageHtmlFileName(config)))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err)
 		return err
