@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"config"
 
@@ -104,5 +105,9 @@ func getMemProfileFileName(config *config.RunConfig, packageName string) string 
 }
 
 func getTorchFileName(config *config.RunConfig, packageName string) string {
-	return getTestPath(config) + filepath.Base(packageName) + "_cpu.svg"
+	if config.Benchmark.Regexp == "." {
+		return fmt.Sprintf("%s%s_benchtime%d_cpu.svg", getTestPath(config), filepath.Base(packageName), config.Benchmark.BenchTime)
+	}
+	regexp := strings.Replace(config.Benchmark.Regexp, "*", "", -1)
+	return fmt.Sprintf("%s%s_%s_benchtime%d_cpu.svg", getTestPath(config), filepath.Base(packageName), filepath.Base(regexp), config.Benchmark.BenchTime)
 }
