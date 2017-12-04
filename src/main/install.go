@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 
 	"config"
 
@@ -13,9 +14,7 @@ import (
 func install(config *config.RunConfig) error {
 	setEnv(config)
 
-	goarch := os.Getenv("GOARCH")
-
-	if goarch == "amd64" {
+	if runtime.GOARCH == "amd64" {
 		if config.Install.Arch == "64" || config.Install.Arch == "all" {
 			err := installArch64(config)
 			if err != nil {
@@ -26,7 +25,7 @@ func install(config *config.RunConfig) error {
 		if config.Install.Arch == "32" || config.Install.Arch == "all" {
 			return buildArch32(config)
 		}
-	} else if goarch == "386" {
+	} else if runtime.GOARCH == "386" {
 		if config.Install.Arch == "32" || config.Install.Arch == "all" {
 			return installArch32(config)
 		}

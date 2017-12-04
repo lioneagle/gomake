@@ -67,8 +67,7 @@ func generateTorchFile(config *config.RunConfig) error {
 	cpuProfileFileName := getCpuProfileFileName(config, config.Benchmark.Package)
 
 	cmd := exec.Command("go-torch", cpuProfileFileName,
-		"-f", torchFileName,
-		"-width", "1900")
+		"-f", torchFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

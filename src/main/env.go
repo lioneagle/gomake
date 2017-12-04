@@ -21,7 +21,11 @@ func setEnv(config *config.RunConfig) error {
 	if newPath == "" {
 		newPath = dir
 	} else {
-		newPath = fmt.Sprintf("%s;%s", oldPath, dir)
+		if runtime.GOOS == "windows" {
+			newPath = fmt.Sprintf("%s;%s", oldPath, dir)
+		} else {
+			newPath = fmt.Sprintf("%s:%s", oldPath, dir)
+		}
 	}
 
 	err = os.Setenv("GOPATH", newPath)
