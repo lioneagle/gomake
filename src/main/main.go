@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	//"os"
 	//"runtime"
 
@@ -14,14 +14,20 @@ func main() {
 
 	//fmt.Printf("config = %+v\n", config)
 
+	var err error = nil
+
 	switch config.Command {
 	case "coverage":
-		coverage(config)
+		err = coverage(config)
 	case "install":
-		install(config)
+		err = install(config)
 	case "benchmark":
-		benchmark(config)
+		err = benchmark(config)
 	case "pprof":
-		pprof(config)
+		err = pprof(config)
 	}
+	if err != nil {
+		fmt.Println("err =", err)
+	}
+
 }

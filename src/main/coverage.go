@@ -51,7 +51,7 @@ func coverage(config *config.RunConfig) error {
 		}
 	}
 
-	if ok, _ := file.PathOrFileIsExist(tempCoverageFileName); !ok {
+	if ok, _ := file.PathOrFileIsExist(coverageFileName); !ok {
 		return nil
 	}
 
