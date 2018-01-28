@@ -15,6 +15,7 @@ import (
 
 	"github.com/lioneagle/goutil/src/chars"
 	"github.com/lioneagle/goutil/src/file"
+	"github.com/lioneagle/goutil/src/logger"
 )
 
 func coverage(cfg *config.RunConfig) error {
@@ -101,13 +102,18 @@ func showTotalStat(cfg *config.RunConfig) error {
 func mergeCoverageOutput(destFileName, srcFileName string) error {
 	srcData, err := ioutil.ReadFile(srcFileName)
 	if err != nil {
-		fmt.Printf("ERROR: cannot open file %s\r\n", srcFileName)
+		logger.Error("cannot open file %s", srcFileName)
 		return err
 	}
 
 	pos := bytes.Index(srcData, []byte("\n"))
 	if pos == -1 {
 		return nil
+	}
+
+	if ok, _ := file.PathOrFileIsExist(destFileName); !ok {
+		_, err = file.CopyFile(destFileName, srcFileName)
+		return err
 	}
 
 	return file.AppendFile(destFileName, srcData[pos+1:], 0x777)
@@ -151,7 +157,6 @@ func getAllPackages(cfg *config.RunConfig) []string {
 		/*if cfg.Coverage.Verbose {
 			fmt.Printf(line)
 		}*/
-
 	}
 
 	cmd.Wait()

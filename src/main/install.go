@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	"github.com/lioneagle/gomake/src/config"
@@ -54,7 +55,7 @@ func installArch64(cfg *config.RunConfig) error {
 	}
 
 	if cfg.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
+		_, err = file.CopyFile(filepath.FromSlash(cfg.OldGobin+"/"+outputName), getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}
@@ -82,7 +83,7 @@ func installArch32(cfg *config.RunConfig) error {
 	}
 
 	if cfg.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
+		_, err = file.CopyFile(filepath.FromSlash(cfg.OldGobin+"/"+outputName), getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}
@@ -110,7 +111,7 @@ func buildArch32(cfg *config.RunConfig) error {
 	}
 
 	if cfg.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
+		_, err = file.CopyFile(filepath.FromSlash(cfg.OldGobin+"/"+outputName), getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}

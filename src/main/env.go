@@ -51,11 +51,11 @@ func getTestFileName(cfg *config.RunConfig, packageName string) string {
 }
 
 func getTestPath(cfg *config.RunConfig) string {
-	return "./test_temp/"
+	return filepath.FromSlash("./test_temp/")
 }
 
 func getBinPath(cfg *config.RunConfig) string {
-	return "./bin/"
+	return filepath.FromSlash("./bin/")
 }
 
 func buildTestTempDir(cfg *config.RunConfig) error {
