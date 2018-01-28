@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 
 	"github.com/lioneagle/goutil/src/file"
 )
 
-func setEnv(config *config.RunConfig) error {
+func setEnv(cfg *config.RunConfig) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func setEnv(config *config.RunConfig) error {
 		return err
 	}
 
-	config.OldGobin = os.Getenv("GOBIN")
+	cfg.OldGobin = os.Getenv("GOBIN")
 
 	return os.Setenv("GOBIN", filepath.FromSlash(dir+"/bin"))
 }
@@ -45,21 +45,21 @@ func addOsSuffix(name string) string {
 	return name
 }
 
-func getTestFileName(config *config.RunConfig, packageName string) string {
-	name := getTestPath(config) + filepath.Base(packageName) + ".test"
+func getTestFileName(cfg *config.RunConfig, packageName string) string {
+	name := getTestPath(cfg) + filepath.Base(packageName) + ".test"
 	return addOsSuffix(name)
 }
 
-func getTestPath(config *config.RunConfig) string {
+func getTestPath(cfg *config.RunConfig) string {
 	return "./test_temp/"
 }
 
-func getBinPath(config *config.RunConfig) string {
+func getBinPath(cfg *config.RunConfig) string {
 	return "./bin/"
 }
 
-func buildTestTempDir(config *config.RunConfig) error {
-	testTempDir := getTestPath(config)
+func buildTestTempDir(cfg *config.RunConfig) error {
+	testTempDir := getTestPath(cfg)
 	ok, _ := file.PathOrFileIsExist(testTempDir)
 	if !ok {
 		return os.Mkdir(testTempDir, os.ModeDir)

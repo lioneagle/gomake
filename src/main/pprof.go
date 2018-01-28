@@ -5,16 +5,16 @@ import (
 	"os"
 	"os/exec"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 
 	"github.com/lioneagle/goutil/src/file"
 )
 
-func pprof(config *config.RunConfig) error {
-	setEnv(config)
+func pprof(cfg *config.RunConfig) error {
+	setEnv(cfg)
 
-	testFileName := getTestFileName(config, config.Pprof.Package)
-	cpuProfileFileName := getCpuProfileFileName(config, config.Pprof.Package)
+	testFileName := getTestFileName(cfg, cfg.Pprof.Package)
+	cpuProfileFileName := getCpuProfileFileName(cfg, cfg.Pprof.Package)
 
 	ok, _ := file.PathOrFileIsExist(testFileName)
 	if !ok {
@@ -30,7 +30,7 @@ func pprof(config *config.RunConfig) error {
 	fmt.Println("cpuProfileFileName =", cpuProfileFileName)
 
 	cmd := exec.Command("go", "tool", "pprof",
-		"-nodecount", fmt.Sprintf("%d", config.Pprof.NodeCount),
+		"-nodecount", fmt.Sprintf("%d", cfg.Pprof.NodeCount),
 		testFileName, cpuProfileFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -6,41 +6,41 @@ import (
 	"os/exec"
 	"runtime"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 
 	"github.com/lioneagle/goutil/src/file"
 )
 
-func install(config *config.RunConfig) error {
-	setEnv(config)
+func install(cfg *config.RunConfig) error {
+	setEnv(cfg)
 
 	if runtime.GOARCH == "amd64" {
-		if config.Install.Arch == "64" || config.Install.Arch == "all" {
-			err := installArch64(config)
+		if cfg.Install.Arch == "64" || cfg.Install.Arch == "all" {
+			err := installArch64(cfg)
 			if err != nil {
 				return err
 			}
 		}
 
-		if config.Install.Arch == "32" || config.Install.Arch == "all" {
-			return buildArch32(config)
+		if cfg.Install.Arch == "32" || cfg.Install.Arch == "all" {
+			return buildArch32(cfg)
 		}
 	} else if runtime.GOARCH == "386" {
-		if config.Install.Arch == "32" || config.Install.Arch == "all" {
-			return installArch32(config)
+		if cfg.Install.Arch == "32" || cfg.Install.Arch == "all" {
+			return installArch32(cfg)
 		}
 	}
 
 	return nil
 }
 
-func installArch64(config *config.RunConfig) error {
+func installArch64(cfg *config.RunConfig) error {
 	fmt.Println("installing 64-bit ......")
 
-	installName := getInstallOutputName(config)
-	outputName := getArch64OutputName(config)
+	installName := getInstallOutputName(cfg)
+	outputName := getArch64OutputName(cfg)
 
-	cmd := exec.Command("go", "install", config.Install.Package)
+	cmd := exec.Command("go", "install", cfg.Install.Package)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -48,13 +48,13 @@ func installArch64(config *config.RunConfig) error {
 		return err
 	}
 
-	err = os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	err = os.Rename(getBinPath(cfg)+installName, getBinPath(cfg)+outputName)
 	if err != nil {
 		return err
 	}
 
-	if config.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+	if cfg.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}
@@ -62,13 +62,13 @@ func installArch64(config *config.RunConfig) error {
 	return nil
 }
 
-func installArch32(config *config.RunConfig) error {
+func installArch32(cfg *config.RunConfig) error {
 	fmt.Println("installing 32-bit ......")
 
-	installName := getInstallOutputName(config)
-	outputName := getArch32OutputName(config)
+	installName := getInstallOutputName(cfg)
+	outputName := getArch32OutputName(cfg)
 
-	cmd := exec.Command("go", "install", config.Install.Package)
+	cmd := exec.Command("go", "install", cfg.Install.Package)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -76,13 +76,13 @@ func installArch32(config *config.RunConfig) error {
 		return err
 	}
 
-	err = os.Rename(getBinPath(config)+installName, getBinPath(config)+outputName)
+	err = os.Rename(getBinPath(cfg)+installName, getBinPath(cfg)+outputName)
 	if err != nil {
 		return err
 	}
 
-	if config.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+	if cfg.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}
@@ -90,10 +90,10 @@ func installArch32(config *config.RunConfig) error {
 	return nil
 }
 
-func buildArch32(config *config.RunConfig) error {
+func buildArch32(cfg *config.RunConfig) error {
 	fmt.Println("building 32-bit ......")
 
-	outputName := getArch32OutputName(config)
+	outputName := getArch32OutputName(cfg)
 
 	err := os.Setenv("GOARCH", "386")
 	if err != nil {
@@ -101,7 +101,7 @@ func buildArch32(config *config.RunConfig) error {
 	}
 
 	cmd := exec.Command("go", "build",
-		"-o", getBinPath(config)+outputName, config.Install.Package)
+		"-o", getBinPath(cfg)+outputName, cfg.Install.Package)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -109,8 +109,8 @@ func buildArch32(config *config.RunConfig) error {
 		return err
 	}
 
-	if config.Install.CopyToStdGoBin {
-		_, err = file.CopyFile(config.OldGobin+"/"+outputName, getBinPath(config)+outputName)
+	if cfg.Install.CopyToStdGoBin {
+		_, err = file.CopyFile(cfg.OldGobin+"/"+outputName, getBinPath(cfg)+outputName)
 		if err != nil {
 			return err
 		}
@@ -118,34 +118,34 @@ func buildArch32(config *config.RunConfig) error {
 	return nil
 }
 
-func getOriginalOutputName(config *config.RunConfig) string {
-	name := config.Install.Package
-	if config.Install.OutputName != "" {
-		name = config.Install.OutputName
+func getOriginalOutputName(cfg *config.RunConfig) string {
+	name := cfg.Install.Package
+	if cfg.Install.OutputName != "" {
+		name = cfg.Install.OutputName
 	}
 	return name
 }
 
-func getArch64OutputName(config *config.RunConfig) string {
-	name := getOriginalOutputName(config)
+func getArch64OutputName(cfg *config.RunConfig) string {
+	name := getOriginalOutputName(cfg)
 
-	if config.Install.WithArchSuffix {
+	if cfg.Install.WithArchSuffix {
 		name += "_64"
 	}
 
 	return addOsSuffix(name)
 }
 
-func getArch32OutputName(config *config.RunConfig) string {
-	name := getOriginalOutputName(config)
+func getArch32OutputName(cfg *config.RunConfig) string {
+	name := getOriginalOutputName(cfg)
 
-	if config.Install.WithArchSuffix {
+	if cfg.Install.WithArchSuffix {
 		name += "_32"
 	}
 
 	return addOsSuffix(name)
 }
 
-func getInstallOutputName(config *config.RunConfig) string {
-	return addOsSuffix(config.Install.Package)
+func getInstallOutputName(cfg *config.RunConfig) string {
+	return addOsSuffix(cfg.Install.Package)
 }

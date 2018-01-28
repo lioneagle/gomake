@@ -7,40 +7,40 @@ import (
 	"path/filepath"
 	"strings"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 
 	"github.com/lioneagle/goutil/src/file"
 )
 
-func benchmark(config *config.RunConfig) error {
-	setEnv(config)
+func benchmark(cfg *config.RunConfig) error {
+	setEnv(cfg)
 
-	err := buildTestTempDir(config)
+	err := buildTestTempDir(cfg)
 	if err != nil {
 		return err
 	}
 
-	err = removeBenchmarkFiles(config)
+	err = removeBenchmarkFiles(cfg)
 	if err != nil {
 		return err
 	}
 
-	err = doBenchmark(config)
+	err = doBenchmark(cfg)
 	if err != nil {
 		return err
 	}
 
-	err = generateTestFile(config)
+	err = generateTestFile(cfg)
 	if err != nil {
 		return err
 	}
 
-	if ok, _ := file.PathOrFileIsExist(getCpuProfileFileName(config, config.Benchmark.Package)); !ok {
+	if ok, _ := file.PathOrFileIsExist(getCpuProfileFileName(cfg, cfg.Benchmark.Package)); !ok {
 		return nil
 	}
 
-	if config.Benchmark.GoTorch {
-		err = generateTorchFile(config)
+	if cfg.Benchmark.GoTorch {
+		err = generateTorchFile(cfg)
 		if err != nil {
 			return err
 		}
@@ -48,13 +48,13 @@ func benchmark(config *config.RunConfig) error {
 	return nil
 }
 
-func doBenchmark(config *config.RunConfig) error {
-	cpuProfileFileName := getCpuProfileFileName(config, config.Benchmark.Package)
-	memProfileFileName := getMemProfileFileName(config, config.Benchmark.Package)
+func doBenchmark(cfg *config.RunConfig) error {
+	cpuProfileFileName := getCpuProfileFileName(cfg, cfg.Benchmark.Package)
+	memProfileFileName := getMemProfileFileName(cfg, cfg.Benchmark.Package)
 
-	cmd := exec.Command("go", "test", config.Benchmark.Package,
-		"-bench", config.Benchmark.Regexp,
-		"-benchtime", fmt.Sprintf("%ds", config.Benchmark.BenchTime),
+	cmd := exec.Command("go", "test", cfg.Benchmark.Package,
+		"-bench", cfg.Benchmark.Regexp,
+		"-benchtime", fmt.Sprintf("%ds", cfg.Benchmark.BenchTime),
 		"-cpuprofile", cpuProfileFileName,
 		"-memprofile", memProfileFileName)
 
@@ -63,9 +63,9 @@ func doBenchmark(config *config.RunConfig) error {
 	return cmd.Run()
 }
 
-func generateTorchFile(config *config.RunConfig) error {
-	torchFileName := getTorchFileName(config, config.Benchmark.Package)
-	cpuProfileFileName := getCpuProfileFileName(config, config.Benchmark.Package)
+func generateTorchFile(cfg *config.RunConfig) error {
+	torchFileName := getTorchFileName(cfg, cfg.Benchmark.Package)
+	cpuProfileFileName := getCpuProfileFileName(cfg, cfg.Benchmark.Package)
 
 	cmd := exec.Command("go-torch", cpuProfileFileName,
 		"-f", torchFileName)
@@ -74,10 +74,10 @@ func generateTorchFile(config *config.RunConfig) error {
 	return cmd.Run()
 }
 
-func generateTestFile(config *config.RunConfig) error {
-	testFileName := getTestFileName(config, config.Benchmark.Package)
+func generateTestFile(cfg *config.RunConfig) error {
+	testFileName := getTestFileName(cfg, cfg.Benchmark.Package)
 
-	cmd := exec.Command("go", "test", config.Benchmark.Package,
+	cmd := exec.Command("go", "test", cfg.Benchmark.Package,
 		"-bench", ".",
 		"-c",
 		"-o", testFileName)
@@ -86,28 +86,28 @@ func generateTestFile(config *config.RunConfig) error {
 	return cmd.Run()
 }
 
-func removeBenchmarkFiles(config *config.RunConfig) error {
+func removeBenchmarkFiles(cfg *config.RunConfig) error {
 	filenames := []string{
-		getTestFileName(config, config.Benchmark.Package),
-		getCpuProfileFileName(config, config.Benchmark.Package),
-		getMemProfileFileName(config, config.Benchmark.Package),
+		getTestFileName(cfg, cfg.Benchmark.Package),
+		getCpuProfileFileName(cfg, cfg.Benchmark.Package),
+		getMemProfileFileName(cfg, cfg.Benchmark.Package),
 	}
 
 	return file.RemoveExistFiles(filenames)
 }
 
-func getCpuProfileFileName(config *config.RunConfig, packageName string) string {
-	return getTestPath(config) + filepath.Base(packageName) + "_cpu.prof"
+func getCpuProfileFileName(cfg *config.RunConfig, packageName string) string {
+	return getTestPath(cfg) + filepath.Base(packageName) + "_cpu.prof"
 }
 
-func getMemProfileFileName(config *config.RunConfig, packageName string) string {
-	return getTestPath(config) + filepath.Base(packageName) + "_mem.prof"
+func getMemProfileFileName(cfg *config.RunConfig, packageName string) string {
+	return getTestPath(cfg) + filepath.Base(packageName) + "_mem.prof"
 }
 
-func getTorchFileName(config *config.RunConfig, packageName string) string {
-	if config.Benchmark.Regexp == "." {
-		return fmt.Sprintf("%s%s_benchtime%d_cpu.svg", getTestPath(config), filepath.Base(packageName), config.Benchmark.BenchTime)
+func getTorchFileName(cfg *config.RunConfig, packageName string) string {
+	if cfg.Benchmark.Regexp == "." {
+		return fmt.Sprintf("%s%s_benchtime%d_cpu.svg", getTestPath(cfg), filepath.Base(packageName), cfg.Benchmark.BenchTime)
 	}
-	regexp := strings.Replace(config.Benchmark.Regexp, "*", "", -1)
-	return fmt.Sprintf("%s%s_%s_benchtime%d_cpu.svg", getTestPath(config), filepath.Base(packageName), filepath.Base(regexp), config.Benchmark.BenchTime)
+	regexp := strings.Replace(cfg.Benchmark.Regexp, "*", "", -1)
+	return fmt.Sprintf("%s%s_%s_benchtime%d_cpu.svg", getTestPath(cfg), filepath.Base(packageName), filepath.Base(regexp), cfg.Benchmark.BenchTime)
 }

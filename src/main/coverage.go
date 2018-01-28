@@ -11,32 +11,32 @@ import (
 	"path/filepath"
 	"strings"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 
 	"github.com/lioneagle/goutil/src/chars"
 	"github.com/lioneagle/goutil/src/file"
 )
 
-func coverage(config *config.RunConfig) error {
-	setEnv(config)
+func coverage(cfg *config.RunConfig) error {
+	setEnv(cfg)
 
-	coverageFileName := getCoverageFileName(config)
-	tempCoverageFileName := getTempCoverageFileName(config)
+	coverageFileName := getCoverageFileName(cfg)
+	tempCoverageFileName := getTempCoverageFileName(cfg)
 
 	file.RemoveExistFile(coverageFileName)
 
-	packages := parsePackages(config)
+	packages := parsePackages(cfg)
 	if len(packages) <= 0 {
 		return nil
 	}
 
-	err := coverageOnePackage(config, packages[0], coverageFileName)
+	err := coverageOnePackage(cfg, packages[0], coverageFileName)
 	if err != nil {
 		return err
 	}
 
 	for i := 1; i < len(packages); i++ {
-		err = coverageOnePackage(config, packages[i], tempCoverageFileName)
+		err = coverageOnePackage(cfg, packages[i], tempCoverageFileName)
 		if err != nil {
 			return err
 		}
@@ -55,24 +55,24 @@ func coverage(config *config.RunConfig) error {
 		return nil
 	}
 
-	if err = showTotalStat(config); err != nil {
+	if err = showTotalStat(cfg); err != nil {
 		return err
 	}
 
-	if err = generateHtml(config); err != nil {
+	if err = generateHtml(cfg); err != nil {
 		return err
 	}
 
-	if config.Coverage.ShowHtml {
-		showHtml(config)
+	if cfg.Coverage.ShowHtml {
+		showHtml(cfg)
 	}
 
 	return nil
 }
 
-func showTotalStat(config *config.RunConfig) error {
+func showTotalStat(cfg *config.RunConfig) error {
 	cmd := exec.Command("go", "tool", "cover",
-		"-func", getCoverageFileName(config))
+		"-func", getCoverageFileName(cfg))
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -113,21 +113,22 @@ func mergeCoverageOutput(destFileName, srcFileName string) error {
 	return file.AppendFile(destFileName, srcData[pos+1:], 0x777)
 }
 
-func parsePackages(config *config.RunConfig) []string {
+func parsePackages(cfg *config.RunConfig) []string {
 	var packages []string
 
-	if config.Coverage.Packages == "." {
-		packages = getAllPackages(config)
+	if cfg.Coverage.Packages == "." {
+		packages = getAllPackages(cfg)
 	} else {
-		packages = strings.Split(config.Coverage.Packages, ",")
+		packages = strings.Split(cfg.Coverage.Packages, ",")
 	}
 
-	filters := []string{"main", "github", "vendor"}
+	//filters := []string{"main", "github", "vendor"}
+	filters := []string{"main", "vendor"}
 
 	return chars.FilterReverse(packages, filters)
 }
 
-func getAllPackages(config *config.RunConfig) []string {
+func getAllPackages(cfg *config.RunConfig) []string {
 	var ret []string
 	cmd := exec.Command("go", "list", "./...")
 	stdout, err := cmd.StdoutPipe()
@@ -146,6 +147,11 @@ func getAllPackages(config *config.RunConfig) []string {
 			break
 		}
 		ret = append(ret, strings.TrimSpace(line))
+
+		/*if cfg.Coverage.Verbose {
+			fmt.Printf(line)
+		}*/
+
 	}
 
 	cmd.Wait()
@@ -153,19 +159,19 @@ func getAllPackages(config *config.RunConfig) []string {
 	return ret
 }
 
-func coverageOnePackage(config *config.RunConfig, packageName, coverageFileName string) error {
+func coverageOnePackage(cfg *config.RunConfig, packageName, coverageFileName string) error {
 	var cmd *exec.Cmd
 
-	if config.Coverage.Verbose {
+	if cfg.Coverage.Verbose {
 		cmd = exec.Command("go", "test", "-cover",
 			"-coverprofile", coverageFileName,
-			"-run", config.Coverage.Regexp,
+			"-run", cfg.Coverage.Regexp,
 			"-v",
 			packageName)
 	} else {
 		cmd = exec.Command("go", "test", "-cover",
 			"-coverprofile", coverageFileName,
-			"-run", config.Coverage.Regexp,
+			"-run", cfg.Coverage.Regexp,
 			packageName)
 	}
 	cmd.Stdout = os.Stdout
@@ -173,17 +179,17 @@ func coverageOnePackage(config *config.RunConfig, packageName, coverageFileName 
 	return cmd.Run()
 }
 
-func generateHtml(config *config.RunConfig) error {
+func generateHtml(cfg *config.RunConfig) error {
 	cmd := exec.Command("go", "tool", "cover",
-		"-html", getCoverageFileName(config),
-		"-o", getCoverageHtmlFileName(config))
+		"-html", getCoverageFileName(cfg),
+		"-o", getCoverageHtmlFileName(cfg))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
-func showHtml(config *config.RunConfig) error {
-	cmd := exec.Command("cmd", "/C", filepath.FromSlash(getCoverageHtmlFileName(config)))
+func showHtml(cfg *config.RunConfig) error {
+	cmd := exec.Command("cmd", "/C", filepath.FromSlash(getCoverageHtmlFileName(cfg)))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -195,13 +201,13 @@ func showHtml(config *config.RunConfig) error {
 	return nil
 }
 
-func getCoverageFileName(config *config.RunConfig) string {
-	return getTestPath(config) + "coverage.out"
+func getCoverageFileName(cfg *config.RunConfig) string {
+	return getTestPath(cfg) + "coverage.out"
 }
-func getTempCoverageFileName(config *config.RunConfig) string {
-	return getTestPath(config) + "coverage1.out"
+func getTempCoverageFileName(cfg *config.RunConfig) string {
+	return getTestPath(cfg) + "coverage1.out"
 }
 
-func getCoverageHtmlFileName(config *config.RunConfig) string {
-	return getTestPath(config) + "coverage.html"
+func getCoverageHtmlFileName(cfg *config.RunConfig) string {
+	return getTestPath(cfg) + "coverage.html"
 }

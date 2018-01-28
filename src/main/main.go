@@ -5,7 +5,7 @@ import (
 	//"os"
 	//"runtime"
 
-	"config"
+	"github.com/lioneagle/gomake/src/config"
 )
 
 func main() {
