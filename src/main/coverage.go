@@ -129,7 +129,7 @@ func parsePackages(cfg *config.RunConfig) []string {
 	}
 
 	//filters := []string{"main", "github", "vendor"}
-	filters := []string{"main", "vendor"}
+	filters := []string{"main", "github", "vendor", "test_data", "test_temp"}
 
 	return chars.FilterReverse(packages, filters)
 }
@@ -152,6 +152,7 @@ func getAllPackages(cfg *config.RunConfig) []string {
 		if err != nil || io.EOF == err {
 			break
 		}
+
 		ret = append(ret, strings.TrimSpace(line))
 
 		/*if cfg.Coverage.Verbose {
