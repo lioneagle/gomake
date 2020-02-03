@@ -102,7 +102,7 @@ func showTotalStat(cfg *config.RunConfig) error {
 func mergeCoverageOutput(destFileName, srcFileName string) error {
 	srcData, err := ioutil.ReadFile(srcFileName)
 	if err != nil {
-		logger.Error("cannot open file %s", srcFileName)
+		logger.Errorf("cannot open file %s", srcFileName)
 		return err
 	}
 
